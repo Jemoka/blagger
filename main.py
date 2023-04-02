@@ -10,10 +10,13 @@ from dataclasses import dataclass
 from rank_bm25 import BM25Okapi
 from transformers import GPT2Tokenizer
 
+from nltk import sent_tokenize
+
 DEVICE = torch.device('cuda') if torch.cuda.is_available() else torch.device("mps") if torch.backends.mps.is_available() else torch.device('cpu')
 
 @dataclass
 class EngineResponse:
+    # abstractive_answer: str
     extractive_answer: str
     extractive_padding: list[str]
     extractive_score: float
@@ -43,6 +46,7 @@ class Engine:
         self.__title_engine = BM25Okapi(data.index.to_series().apply(lambda x:self.__tf(x)).tolist())
 
         self.__extractive_pipeline = pipeline("question-answering", model='deepset/roberta-base-squad2')
+        # self.__abstractive_pipeline = pipeline("text2text-generation", model='vblagoje/bart_lfqa')
         self.__threshold = threshold
 
         self.tokenizer = t
@@ -90,6 +94,8 @@ class Engine:
             The permalink to the response article.
         qa : dict
             The output from Huggingface QA.
+        # asbt: dict
+        #     The output from Huggingface summary.
 
         Returns
         -------
@@ -104,8 +110,8 @@ class Engine:
         padding_start = content[max(0, qa["start"]-PADDING_SIZE):qa["start"]]
         padding_end = content[qa["end"]+1:min(len(content), qa["end"]+PADDING_SIZE)]
 
-        return EngineResponse(qa["answer"], [padding_start, padding_end],
-                              qa["score"], link)
+        # we take 1 sentence because the results is kinda odd
+        return EngineResponse(qa["answer"], [padding_start, padding_end], qa["score"], link)
 
     def __run_qa(self, index, query):
         """util function to run QA.
@@ -125,12 +131,26 @@ class Engine:
 
         entry = self.__raw.loc[index]
         text = self.__tex_sanitize(entry.contents).lower()
-        qa = self.__extractive_pipeline(context=text, question=query.lower(), device=DEVICE)
-
-        if text == "":
+        if text ==  "":
             return None # empty page
 
+        qa = self.__extractive_pipeline(context=text, question=query.lower(), device=DEVICE)
+
         if qa["score"] > self.__threshold:
+            # # also run abstractive QA
+            # # the window to return padding
+            # PADDING_SIZE = 300
+
+            # # calculate padding text
+            # padding_start = text[max(0, qa["start"]-PADDING_SIZE):qa["start"]]
+            # padding_end = text[qa["end"]+1:min(len(text), qa["end"]+PADDING_SIZE)]
+
+            # # create the right input
+            # context = padding_start+qa["answer"]+padding_end
+            # # query!
+            # prompt = f"question: {query} context: {context}"
+            # abstr = self.__abstractive_pipeline(prompt)
+
             return self.__assemble_result(index, text, entry.permalink, qa)
 
     def quick_query(self, query):
@@ -192,8 +212,9 @@ def get_data(uri="https://www.jemoka.com/index.json"):
     df.drop(columns=["categories", "tags", "title"], inplace=True)
     return df
 
-df = get_data()
+# df = get_data()
 e = Engine(df, 0.1)
 e.query("what is the legacy of FDR?")
-e.quick_query("who is FDR")
+e.query("what is cyro-em?")
+e.quick_query("who is FDR?")
 
