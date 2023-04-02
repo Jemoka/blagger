@@ -8,8 +8,7 @@ from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
 from dataclasses import dataclass
 from rank_bm25 import BM25Okapi
-
-from bpe import Encoder
+from transformers import GPT2Tokenizer
 
 DEVICE = torch.device('cuda') if torch.cuda.is_available() else torch.device("mps") if torch.backends.mps.is_available() else torch.device('cpu')
 
@@ -35,10 +34,10 @@ class Engine:
     def __init__(self, data, threshold=0.4):
         self.__raw = data
 
-        t = Encoder(200, pct_bpe=0.88, EOW="", SOW="", UNK="", PAD="")
-        t.fit(self.__raw.contents.apply(lambda x:x.lower()).tolist())
+        t = GPT2Tokenizer.from_pretrained("gpt2")
 
-        self.__tf = lambda x:list(filter(lambda i:i!="", t.tokenize(x.lower())))
+        self.__tf = lambda x:[i.replace("Ġ", "") for i in
+                              filter(lambda i:i!="", t.tokenize(x.lower()))]
 
         self.__content_engine = BM25Okapi(data.contents.apply(lambda x:self.__tf(x)).tolist())
         self.__title_engine = BM25Okapi(data.index.to_series().apply(lambda x:self.__tf(x)).tolist())
@@ -134,6 +133,31 @@ class Engine:
         if qa["score"] > self.__threshold:
             return self.__assemble_result(index, text, entry.permalink, qa)
 
+    def quick_query(self, query):
+        """Runs a quick query of the database.
+
+        Parameters
+        ----------
+        query : str
+            The query string.
+
+        Returns
+        -------
+        title_result : str
+            The result of a quick query on the title.
+        full_text_result : str
+            The result of a full text query.
+        """
+        # clean and split query into words to search for TF-IDF
+        cleaned_query = self.__tf(self.__clean_query_for_bm25(query))
+
+        # get the search result on title and on full-text
+        title_result = self.__title_engine.get_top_n(cleaned_query, self.__raw.index, 1)[0]
+        full_text_result = self.__content_engine.get_top_n(cleaned_query, self.__raw.index, 1)[0]
+
+        return title_result, full_text_result
+        
+
     def query(self, query):
         """Queries the engine for the best-match solution.
 
@@ -148,12 +172,7 @@ class Engine:
             The response from the query engine.
         """
 
-        # clean and split query into words to search for TF-IDF
-        cleaned_query = self.__tf(self.__clean_query_for_bm25(query))
-
-        # get the search result on title and on full-text
-        title_result = self.__title_engine.get_top_n(cleaned_query, self.__raw.index, 1)[0]
-        full_text_result = self.__content_engine.get_top_n(cleaned_query, self.__raw.index, 1)[0]
+        title_result, full_text_result = self.quick_query(query)
 
         # check score on title and return
         result = self.__run_qa(title_result, query.lower())
@@ -175,5 +194,6 @@ def get_data(uri="https://www.jemoka.com/index.json"):
 
 df = get_data()
 e = Engine(df, 0.1)
-e.query("what is rosettafold?")
+e.query("what is the legacy of FDR?")
+e.quick_query("who is FDR")
 
