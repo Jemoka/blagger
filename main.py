@@ -9,8 +9,11 @@ from nltk.tokenize import RegexpTokenizer
 from dataclasses import dataclass
 from rank_bm25 import BM25Okapi
 from transformers import GPT2Tokenizer
-
 from nltk import sent_tokenize
+
+from flask import Flask, request
+from flask_json import FlaskJSON, JsonError, json_response, as_json
+
 
 DEVICE = torch.device('cuda') if torch.cuda.is_available() else torch.device("mps") if torch.backends.mps.is_available() else torch.device('cpu')
 
@@ -72,10 +75,11 @@ class Engine:
         """
 
         stopword_list = stopwords.words('english')
-        question_list = ["who", "whose", "what", "where", "when", "how", "why", "which"]
+        question_list = ["who", "whose", "what", "where", "when",
+                         "how", "why", "which"]
 
         tokenizer = RegexpTokenizer(r'\w+')
-        tokenized = tokenizer.tokenize(query)
+        tokenized = tokenizer.tokenize(query.lower())
 
         # filter, join, and return
         return " ".join(list(filter((lambda x : (x not in stopword_list) and
@@ -214,7 +218,26 @@ def get_data(uri="https://www.jemoka.com/index.json"):
 
 # df = get_data()
 e = Engine(df, 0.1)
-e.query("what is the legacy of FDR?")
-e.query("what is cyro-em?")
-e.quick_query("who is FDR?")
 
+# start a flask app
+app = Flask(__name__)
+FlaskJSON(app)
+
+# perform query
+@app.route('/query')
+@as_json
+def query():
+    q = request.args.get('query')
+
+    result = e.query("what is the legacy of FDR?")
+    
+    if result:
+        return {"result": "ok",
+                "payload": dict(result)}
+    else:
+        return {"result": "failed",
+                "payload": "Could not find suitable answer!"}
+
+# yipee
+if __name__ == '__main__':
+    app.run()
