@@ -238,7 +238,7 @@ def query():
                 "payload": asdict(result)}
     else:
         return {"result": "failed",
-                "payload": "Could not find suitable answer!"}, 404
+                "payload": "Could not find suitable answer!"}
 
 # yipee
 if __name__ == '__main__':
