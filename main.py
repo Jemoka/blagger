@@ -229,7 +229,7 @@ FlaskJSON(app)
 def query():
     q = request.args.get('q')
 
-    result = e.query("what is the legacy of FDR?")
+    result = e.query(q)
     
     if result:
         return {"result": "ok",
