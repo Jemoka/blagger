@@ -33,7 +33,7 @@ class Engine:
     Parameters
     ----------
     data : pd.DataFrame
-        The dataframe with columns ["contents", "permalink"] and the index
+        The dataframe with columns ["html", "permalink"] and the index
         as titles to search on.
     threshold : float, optional
         The confidence threshold to return a result.
@@ -47,7 +47,7 @@ class Engine:
         self.__tf = lambda x:[i.replace("Ġ", "") for i in
                               filter(lambda i:i!="", t.tokenize(x.lower()))]
 
-        self.__content_engine = BM25Okapi(data.contents.apply(lambda x:self.__tf(x)).tolist())
+        self.__content_engine = BM25Okapi(data.html.apply(lambda x:self.__tf(x)).tolist())
         self.__title_engine = BM25Okapi(data.index.to_series().apply(lambda x:self.__tf(x)).tolist())
 
         self.__extractive_pipeline = pipeline("question-answering", model='deepset/roberta-base-squad2')
@@ -63,16 +63,18 @@ class Engine:
         Removes backslashes.
         """
 
-        # replace newlines with periods
-        s = s.replace("\n", ". ")
         # sanitiz
         s = re.sub(r'\\\w+\{.*?\}', '', s)
         s = re.sub(r'([_^$%&#{}])', r'\\\1', s)
         s = re.sub(r'\~', r'\\~{}', s)
         s = re.sub(r'\{', r'', s)
         s = re.sub(r'\}', r'', s)
+        s = re.sub(r'<.*?>', r'', s)
         s = re.sub(r'\\', r'', s)
         s = re.sub(r'&\w+;', r'', s)
+        s = re.sub(r' ?\n+ ?', '. ', s)
+        s = re.sub(r'\. ?\.', '.', s)
+
         return s
 
     @staticmethod
@@ -140,7 +142,7 @@ class Engine:
         """
 
         entry = self.__raw.loc[index]
-        text = self.__tex_sanitize(entry.contents).lower()
+        text = self.__tex_sanitize(entry.html).lower()
         if text ==  "":
             return None # empty page
 
