@@ -225,7 +225,7 @@ def get_data(uri="https://www.jemoka.com/index.json"):
     return df
 
 df = get_data()
-e = Engine(df, 0.01)
+e = Engine(df, 0.1)
 
 # start a flask app
 app = Flask(__name__)
