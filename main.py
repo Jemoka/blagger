@@ -25,6 +25,7 @@ class EngineResponse:
     extractive_padding: list[str]
     extractive_score: float
     permalink: str
+    title: str
 
 class Engine:
     """Corpus objects holds the query api and the pipeline
@@ -116,7 +117,7 @@ class Engine:
         padding_end = content[qa["end"]+1:min(len(content), qa["end"]+PADDING_SIZE)]
 
         # we take 1 sentence because the results is kinda odd
-        return EngineResponse(qa["answer"], [padding_start, padding_end], qa["score"], link)
+        return EngineResponse(qa["answer"], [padding_start, padding_end], qa["score"], link, title)
 
     def __run_qa(self, index, query):
         """util function to run QA.
