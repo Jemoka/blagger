@@ -6,7 +6,7 @@ import re
 import torch
 from nltk.corpus import stopwords
 from nltk.tokenize import RegexpTokenizer
-from dataclasses import dataclass
+from dataclasses import dataclass, asdict
 from rank_bm25 import BM25Okapi
 from transformers import GPT2Tokenizer
 from nltk import sent_tokenize
@@ -233,7 +233,7 @@ def query():
     
     if result:
         return {"result": "ok",
-                "payload": dict(result)}
+                "payload": asdict(result)}
     else:
         return {"result": "failed",
                 "payload": "Could not find suitable answer!"}
