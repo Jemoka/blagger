@@ -228,7 +228,6 @@ FlaskJSON(app)
 @as_json
 def query():
     q = request.args.get('q')
-    print(q)
 
     result = e.query(q)
     
