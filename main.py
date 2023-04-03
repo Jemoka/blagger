@@ -10,6 +10,7 @@ from dataclasses import dataclass, asdict
 from rank_bm25 import BM25Okapi
 from transformers import GPT2Tokenizer
 from nltk import sent_tokenize
+from flask_cors import CORS
 
 from flask import Flask, request
 from flask_json import FlaskJSON, JsonError, json_response, as_json
@@ -222,6 +223,7 @@ e = Engine(df, 0.01)
 # start a flask app
 app = Flask(__name__)
 FlaskJSON(app)
+CORS(app)
 
 # perform query
 @app.route('/query')
