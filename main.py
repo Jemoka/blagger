@@ -216,7 +216,7 @@ def get_data(uri="https://www.jemoka.com/index.json"):
     df.drop(columns=["categories", "tags", "title"], inplace=True)
     return df
 
-# df = get_data()
+df = get_data()
 e = Engine(df, 0.1)
 
 # start a flask app
