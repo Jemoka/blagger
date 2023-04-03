@@ -110,7 +110,7 @@ class Engine:
         """
 
         # the window to return padding
-        PADDING_SIZE = 100
+        PADDING_SIZE = 500
 
         # calculate padding text
         padding_start = content[max(0, qa["start"]-PADDING_SIZE):qa["start"]]
