@@ -62,6 +62,10 @@ class Engine:
         Escapes the most common TeX special characters: ~^_#%${}
         Removes backslashes.
         """
+
+        # replace newlines with periods
+        s = s.replace("\n", ". ")
+        # sanitiz
         s = re.sub(r'\\\w+\{.*?\}', '', s)
         s = re.sub(r'([_^$%&#{}])', r'\\\1', s)
         s = re.sub(r'\~', r'\\~{}', s)
