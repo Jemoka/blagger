@@ -227,7 +227,7 @@ FlaskJSON(app)
 @app.route('/query')
 @as_json
 def query():
-    q = request.args.get('query')
+    q = request.args.get('q')
 
     result = e.query("what is the legacy of FDR?")
     
