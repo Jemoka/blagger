@@ -1,3 +1,8 @@
+"""string.py
+
+String manipulation utilities.
+"""
+
 import re
 
 from nltk.tokenize import word_tokenize, RegexpTokenizer
@@ -70,6 +75,4 @@ def tighten_query(query:str):
     # remove punctuation and return
     return re.sub(r"\W", ' ', cleaned).strip()
     
-tighten_query("what's the best semantic similarity metric?")
-
 
