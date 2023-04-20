@@ -1,0 +1,9 @@
+* Inference Models
+In this folder we chuck all the model inference APIs named after *known* NLP tasks. How these models are used vary, but we chuck them all here under a common API so that we can optimize them later downstream.
+
+The API is essentially:
+
+- =PIPELINE= constant referring to the actual initialization of the pipeline
+- =[module name all caps](**payload)= (for instance, for =inference.qa=, =def QA=) exposed to actually call the pipeline
+ 
+That's it. During downstream optimization, just make sure that the API to the all-caps module function stays the same, and you can mess with quantization/loading/caching/any other fanciness.

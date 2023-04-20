@@ -1,4 +1,4 @@
-"""string.py
+"""strings.py
 
 String manipulation utilities.
 """
@@ -75,4 +75,4 @@ def tighten_query(query:str):
     # remove punctuation and return
     return re.sub(r"\W", ' ', cleaned).strip()
     
-
+tighten_query("What's the transformer architecture?")
