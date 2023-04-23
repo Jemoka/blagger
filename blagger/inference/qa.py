@@ -15,7 +15,7 @@ PIPELINE = None
 if not PIPELINE:
     PIPELINE = pipeline("question-answering", model='deepset/roberta-base-squad2')
 
-def qa_results(**payload):
+def QA(**payload):
     return PIPELINE(context=payload["context"],
                     question=payload["question"],
                     device=DEVICE)

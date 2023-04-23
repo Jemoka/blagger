@@ -10,12 +10,16 @@ import json
 from tempfile import TemporaryDirectory
 import shutil
 import subprocess
+import re
 
 import numpy as np
 
 from PIL import Image
 
-from ..inference.qa import QA
+# from ..inference.nsp import NSP
+# from ..inference.qa import QA
+# from ..inference.nli import NLI
+from ..inference.p_rank import P_RANK
 
 # FOR DEBUG:
 # import sys
@@ -30,6 +34,22 @@ FILEDIR = os.path.dirname(os.path.abspath(__file__))
 JARDIR = os.path.abspath( 
     os.path.join(FILEDIR, "../../opt/pdffigures2.jar"))
 JAVADIR = os.path.realpath(shutil.which("java"))
+
+def clean_label(s):
+    """Clean the figure/table labels from a caption string.
+
+    Parameters
+    ----------
+    s : str
+        String to clean.
+
+    Returns
+    -------
+    str
+        The cleaned string.
+    """
+
+    return re.sub(r"(f|t)(i|a)(g|b)\w+ ?\d*(.|:)\W+", "", s, flags=re.IGNORECASE)
 
 def extract(target):
     """Extract figures from PDF file with pdffigures2.
@@ -72,7 +92,7 @@ def extract(target):
 
     return meta["figures"]
 
-def select_figure(figures, query, threshold=0.5):
+def select_figure(figures, query, threshold=95):
     """Select the best figure, if any, that would respond to text query with QA.
 
     Parameters
@@ -86,15 +106,19 @@ def select_figure(figures, query, threshold=0.5):
 
     Results
     -------
-    dict, optional
-        If the result crosses the threshold, return the relavent figure.
+    List[dict], optional
+        If the result crosses the threshold, return the relavent figure(s).
     """
     # to score each elements based an a query
-    qa_results = []
-    for fig in figures:
-        qa_results.append(QA(context=fig["caption"], question=query))
-    best_result = sorted(enumerate(qa_results), key=lambda x:x[1]["score"], reverse=True)[0]
+    result = P_RANK(documents=[clean_label(i["caption"]) for i in figures], question=query)
 
-    # if we are over threshold, return
-    if best_result[1]["score"] >= threshold:
-        return figures[best_result[0]]
+    # get best results
+    best_results = list(filter(lambda x:x[1]["score"] >= threshold, enumerate(result)))
+
+    # sort
+    result_sorted = sorted(best_results, key=lambda x:x[1]["score"], reverse=True)
+
+    # get the actual figures
+    answer_figures = [figures[i[0]] for i in result_sorted]
+
+    return answer_figures

@@ -74,3 +74,4 @@ def tighten_query(query:str):
 
     # remove punctuation and return
     return re.sub(r"\W", ' ', cleaned).strip()
+    
