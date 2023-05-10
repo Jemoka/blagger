@@ -18,9 +18,6 @@ import numpy as np
 
 from PIL import Image
 
-# from ..inference.nsp import NSP
-# from ..inference.qa import QA
-# from ..inference.nli import NLI
 from ..inference.p_rank import P_RANK
 
 # FOR DEBUG:
@@ -55,7 +52,7 @@ def extract_fig_mention(s):
         [['f', ID], ['t', ID]] etc.
     """
 
-    res = re.search(r"([f|t][i|a][g|b][A-Z]*) ?(\d*).|:\W+", s, flags=re.IGNORECASE)
+    res = re.search(r"([f|t][i|a][g|b][A-Z]*)\.? ?(\d*).|:\W+", s, flags=re.IGNORECASE)
 
     if res and res.group(2):
         fig_type = res.group(1)[0].lower()
@@ -77,7 +74,7 @@ def clean_label(s):
         The cleaned string.
     """
 
-    return re.sub(r"(f|t)(i|a)(g|b)\w+ ?\d*(.|:)\W+", "", s, flags=re.IGNORECASE)
+    return re.sub(r"([f|t][i|a][g|b][A-Z]*)\.? ?(\d*).|:\W+", "", s, flags=re.IGNORECASE)
 
 def extract_text(target):
     """Extract text from PDF file.
@@ -101,6 +98,7 @@ def extract_text(target):
 
     # replace
     cleaned = re.sub("\n+", " ", text)
+    cleaned = re.sub("([f|t][i|a][g|b][A-Z]*)\.", r"\1", cleaned, flags=re.IGNORECASE)
     sents = sent_tokenize(cleaned)
 
     # filter result
