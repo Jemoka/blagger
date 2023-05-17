@@ -14,7 +14,6 @@ DEVICE = torch.device('cuda') if torch.cuda.is_available() else torch.device('cp
 # cache so that globally only one pipeline gets initialized
 PIPELINE = None
 TOKENIZER = None
-SOFTMAX = Softmax(dim=1)
 
 if not PIPELINE:
     PIPELINE = AutoModelForSeq2SeqLM.from_pretrained("t5-base").to(DEVICE)
