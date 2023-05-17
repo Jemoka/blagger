@@ -1,6 +1,6 @@
-"""qa.py
+"""p_rank.py
 
-Question-Answering Pipeline Cache
+Passage Ranking Pipeline Cache
 """
 
 import torch

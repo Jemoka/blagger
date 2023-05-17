@@ -1,6 +1,6 @@
-"""qa.py
+"""nsp.py
 
-Question-Answering Pipeline Cache
+Next Sentence Prediction pipeline cache
 """
 
 import torch

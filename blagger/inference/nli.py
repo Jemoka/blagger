@@ -1,6 +1,6 @@
-"""qa.py
+"""nli.py
 
-Question-Answering Pipeline Cache
+Natural Language Inference Pipeline Cache
 """
 
 import torch
