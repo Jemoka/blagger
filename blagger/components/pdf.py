@@ -19,6 +19,7 @@ import numpy as np
 from PIL import Image
 
 from ..inference.p_rank import P_RANK
+from ..inference.qa import QA
 
 # FOR DEBUG:
 # import sys
@@ -145,53 +146,3 @@ def extract_figures(target):
     os.chdir(wd)
 
     return meta["figures"]
-
-def select(figures, sents, query, threshold=100, topn=5):
-    """Select the best sentences + figures, if any, that would respond to text query with QA.
-
-    Parameters
-    ----------
-    figures : list
-        The output of extract_figures() of the figures of the paper.
-    sents : list
-        The output of extract_text() on the paper.
-    query : str
-        The text query to search on.
-    threshold : float, optional
-        The threshold to return a result.
-    topn : int, optional
-        The top n of text identification keep.
-
-    Results
-    -------
-    List[dict], optional
-        If the result crosses the threshold, return the relavent figure(s).
-    """
-
-    # extract figure ids and mentions
-    fig_ids = [extract_fig_mention(i["caption"]) for i in figures]
-
-    # extract best text scores
-    text_scores = P_RANK(documents=sents, question=query)
-    best_text_scores = sorted(filter(lambda x:x["score"] > threshold, text_scores),
-                            key=lambda x:x["score"], reverse=True)[:topn]
-    fig_mentions = [i for i in
-                    [extract_fig_mention(i["document"]) for i in best_text_scores] if i]
-    best_text = [i["document"] for i in best_text_scores]
-
-    # get captions and text scores for caption
-    captions = [clean_label(i["caption"]) for i in figures]
-    fig_scores = P_RANK(documents=captions, question=query)
-    best_fig_scores = sorted(filter(lambda x:x[1]["score"] > threshold, enumerate(fig_scores)),
-                            key=lambda x:x[1]["score"], reverse=True)[:topn]
-    fig_rels = [fig_ids[i[0]] for i in best_fig_scores]
-
-    # combine final relavent figures
-    rel_fig_indicies = list(set(fig_mentions+fig_rels))
-    # and get actual index
-    fig_indicies = [fig_ids.index(i) for i in rel_fig_indicies]
-
-    figs = [figures[i] for i in fig_indicies]
-
-    return best_text, figs
-
