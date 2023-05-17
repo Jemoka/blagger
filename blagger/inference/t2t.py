@@ -22,12 +22,11 @@ if not TOKENIZER:
     TOKENIZER = AutoTokenizer.from_pretrained("t5-base")
 
 class T2TTask(Enum):
-    GERMAN = "translate English to German"
     ACCEPTABILITY = "cola sentence"
     SUMMARIZE = "summarize"
 
 def T2T(**payload):
-    task = payload["task"]
+    task = payload.get("task", T2TTask.SUMMARIZE) # sumarize by default
     payload = payload["payload"]
 
     assert type(task) == T2TTask, "Unexpected task. Please pass instance of T2TTask."
